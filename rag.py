@@ -23,6 +23,7 @@ from langchain_core.embeddings import Embeddings
 from pypdf import PdfReader
 import docx2txt
 
+# Ensure uploads directory exists
 Path("uploads").mkdir(exist_ok=True)
 
 # ─── 100% LOCAL EMBEDDINGS (Zero API Calls) ───────────────────────
@@ -74,7 +75,7 @@ def clean_text(text: str) -> str:
     return re.sub(r'\s+', ' ', text).strip()
 
 def read_file_text(file_path: str) -> str:
-    path = Path(file_//file_path) if isinstance(file_path, str) else Path(file_path)
+    path = Path(file_path)
     suffix = path.suffix.lower()
     try:
         if suffix == ".pdf":
@@ -92,27 +93,27 @@ def read_file_text(file_path: str) -> str:
 def add_document_to_rag(file_path: str, thread_id: str):
     try:
         logger.info(f"Processing locally: {file_path} (Thread: {thread_id})")
-        text = clean_text(read_file_text(file_path))
+        p = Path(file_path)
+        text = clean_text(read_file_text(str(p)))
         if not text: return {"success": False, "error": "No text found"}
 
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         chunks = splitter.split_text(text)
 
         docs = [
-            Document(page_content=c, metadata={"thread_id": thread_id, "source": Path(file_path).name})
+            Document(page_content=c, metadata={"thread_id": thread_id, "source": p.name})
             for c in chunks
         ]
 
         vectorstore.add_documents(docs)
         logger.info(f"Successfully added {len(docs)} chunks locally.")
-        return {"success": True, "filename": Path(file_path).name, "chunks": len(docs)}
+        return {"success": True, "filename": p.name, "chunks": len(docs)}
     except Exception as e:
         logger.error(f"RAG Error: {e}")
         return {"success": False, "error": str(e)}
 
 def retrieve_from_rag(query: str, thread_id: str, k: int = 5) -> str:
     try:
-        # Search locally
         docs = vectorstore.similarity_search(query, k=k, filter={"thread_id": thread_id})
         if not docs:
             docs = vectorstore.similarity_search(query, k=k)

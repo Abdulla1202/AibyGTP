@@ -12,7 +12,7 @@ import uuid
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI, Request, UploadFile, File, Form, Depends
+from fastapi import FastAPI, Request, UploadFile, File, Form, Depends, BackgroundTasks
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
@@ -259,6 +259,7 @@ async def delete_conv(thread_id: str, current_user: dict = Depends(get_current_u
 
 @app.post("/upload")
 async def upload_document(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     thread_id: str = Form(...),
     current_user: dict = Depends(get_current_user)
@@ -288,24 +289,24 @@ async def upload_document(
 
         create_or_update_conversation(thread_id, "Uploaded document", user_id=user_id)
 
-        result = add_document_to_rag(
-            file_path=file_path,
-            thread_id=thread_id
-        )
+        # Process document in background so user doesn't have to wait
+        background_tasks.add_task(add_document_to_rag, file_path, thread_id)
 
         return JSONResponse({
             "success": True,
-            "message": f"Uploaded {result['filename']} and created {result['chunks']} chunks."
+            "message": f"Uploaded {filename} successfully! We are now processing it in the background. You can start chatting soon."
         })
 
-    except Exception as e:
-        return JSONResponse(
-            {
-                "success": False,
-                "message": str(e)
-            },
-            status_code=500
-        )
+        except Exception as e:
+            import logging
+            logging.error(f"Upload Error: {str(e)}", exc_info=True)
+            return JSONResponse(
+                {
+                    "success": False,
+                    "message": str(e)
+                },
+                status_code=500
+            )
 
 
 
@@ -687,6 +688,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "app:app",
         host="0.0.0.0",
-        port=int(os.getenv("PORT", 8080)),
+        port=int(os.getenv("PORT", 8090)),
         reload=False
     )
