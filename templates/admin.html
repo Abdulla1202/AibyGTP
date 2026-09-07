@@ -1,0 +1,2651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AibyAI — Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #0f0f0f;
+            --bg-surface: #141414;
+            --bg-card: #1a1a1a;
+            --bg-card-hover: #222222;
+            --bg-elevated: #262626;
+            --border-color: #2a2a2a;
+            --border-subtle: #1f1f1f;
+            
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-light: #818cf8;
+            --primary-glow: rgba(99, 102, 241, 0.15);
+            
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.15);
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.15);
+
+            --text-main: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            
+            --sidebar-width: 260px;
+            --header-height: 64px;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-full: 9999px;
+
+            --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ─── Scrollbar ────────────────────────────────────────── */
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-base);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a2a2a;
+            border-radius: var(--radius-full);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3f3f3f;
+        }
+
+        /* ─── Layout ───────────────────────────────────────────── */
+        #app {
+            display: flex;
+            width: 100vw;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* ─── Sidebar ──────────────────────────────────────────── */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-surface);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .sidebar-header {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .brand-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .brand-logo {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+            flex-shrink: 0;
+        }
+
+        .brand-logo svg {
+            width: 18px;
+            height: 18px;
+            color: #ffffff;
+        }
+
+        .brand-text-block {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-title {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, #ffffff 40%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-subtitle {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--primary-light);
+            font-weight: 600;
+        }
+
+        .sidebar-close-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: var(--radius-sm);
+        }
+
+        .sidebar-close-btn:hover {
+            color: var(--text-main);
+            background: var(--bg-card);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow-y: auto;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            padding: 8px 10px 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition);
+            cursor: pointer;
+            border: 1px solid transparent;
+            user-select: none;
+        }
+
+        .nav-item:hover {
+            color: var(--text-main);
+            background-color: var(--bg-card);
+            border-color: var(--border-subtle);
+        }
+
+        .nav-item.active {
+            color: #ffffff;
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.18), rgba(99, 102, 241, 0.05));
+            border-color: rgba(99, 102, 241, 0.3);
+            font-weight: 600;
+        }
+
+        .nav-item svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+
+        .nav-item.active svg {
+            color: var(--primary-light);
+        }
+
+        .sidebar-footer {
+            padding: 16px 14px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(15, 15, 15, 0.4);
+        }
+
+        .admin-profile-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            margin-bottom: 6px;
+        }
+
+        .admin-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-full);
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .admin-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .admin-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .admin-role-badge {
+            font-size: 10px;
+            color: var(--primary-light);
+            font-weight: 500;
+        }
+
+        .sidebar-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .sidebar-btn.btn-back-chat {
+            color: var(--text-secondary);
+            background: transparent;
+        }
+
+        .sidebar-btn.btn-back-chat:hover {
+            color: var(--text-main);
+            background: var(--bg-card);
+            border-color: var(--border-color);
+        }
+
+        .sidebar-btn.btn-logout {
+            color: #f87171;
+            background: transparent;
+        }
+
+        .sidebar-btn.btn-logout:hover {
+            color: #ffffff;
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .sidebar-btn svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        /* ─── Backdrop Overlay ─────────────────────────────────── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(3px);
+            z-index: 90;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        /* ─── Main Content Wrapper ─────────────────────────────── */
+        .main-wrapper {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-base);
+            width: calc(100vw - var(--sidebar-width));
+            transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* ─── Top Header ───────────────────────────────────────── */
+        .top-header {
+            height: var(--header-height);
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            position: sticky;
+            top: 0;
+            z-index: 80;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .hamburger-btn {
+            display: none;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 7px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .hamburger-btn:hover {
+            background: var(--bg-card);
+        }
+
+        .hamburger-btn svg {
+            width: 20px;
+            height: 20px;
+            display: block;
+        }
+
+        .header-breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .breadcrumb-root {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .breadcrumb-sep {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .breadcrumb-active {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .system-status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            padding: 5px 10px;
+            border-radius: var(--radius-full);
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: var(--radius-full);
+            background-color: var(--success);
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        .btn-icon-refresh {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon-refresh:hover {
+            color: var(--text-main);
+            background: var(--bg-elevated);
+            border-color: #3f3f3f;
+        }
+
+        .btn-icon-refresh.spinning svg {
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* ─── Content View Area ────────────────────────────────── */
+        .content-area {
+            flex: 1;
+            padding: 28px;
+            max-width: 1440px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .view-pane {
+            display: none;
+            animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .view-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ─── View Headers & Titles ────────────────────────────── */
+        .view-header {
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .view-title-group h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.4px;
+        }
+
+        .view-title-group p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* ─── Stats Cards Grid ─────────────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: #383838;
+            background-color: var(--bg-card-hover);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-icon-wrapper {
+            width: 42px;
+            height: 42px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .stat-card:nth-child(1) .stat-icon-wrapper {
+            background: rgba(99, 102, 241, 0.12);
+            color: var(--primary-light);
+            border-color: rgba(99, 102, 241, 0.25);
+        }
+        .stat-card:nth-child(2) .stat-icon-wrapper {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--success);
+            border-color: rgba(16, 185, 129, 0.25);
+        }
+        .stat-card:nth-child(3) .stat-icon-wrapper {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--warning);
+            border-color: rgba(245, 158, 11, 0.25);
+        }
+        .stat-card:nth-child(4) .stat-icon-wrapper {
+            background: rgba(168, 85, 247, 0.12);
+            color: #c084fc;
+            border-color: rgba(168, 85, 247, 0.25);
+        }
+
+        .stat-icon-wrapper svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .stat-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: var(--radius-full);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-secondary);
+        }
+
+        .stat-body {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* ─── Dashboard Sections (Recent Activity) ─────────────── */
+        .dashboard-content-split {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 22px;
+        }
+
+        @media (max-width: 1080px) {
+            .dashboard-content-split {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-header h2 svg {
+            width: 18px;
+            height: 18px;
+            color: var(--primary-light);
+        }
+
+        .panel-action-btn {
+            font-size: 13px;
+            color: var(--primary-light);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: var(--transition);
+        }
+
+        .panel-action-btn:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        .activity-list {
+            list-style: none;
+            padding: 8px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .activity-item {
+            padding: 14px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-item:hover {
+            background-color: var(--bg-card-hover);
+        }
+
+        .activity-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            overflow: hidden;
+        }
+
+        .activity-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--text-secondary);
+        }
+
+        .activity-details {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .activity-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .activity-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 2px;
+        }
+
+        .activity-meta .thread-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+            background: var(--bg-elevated);
+            padding: 1px 6px;
+            border-radius: 4px;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* ─── Search, Filter, and Action Bar ───────────────────── */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 260px;
+            max-width: 440px;
+        }
+
+        .search-box-wrapper svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 17px;
+            height: 17px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 9px 12px 9px 38px;
+            color: var(--text-main);
+            font-size: 13.5px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+            background: var(--bg-surface);
+        }
+
+        .filter-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .select-filter {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 9px 14px;
+            border-radius: var(--radius-md);
+            font-size: 13.5px;
+            outline: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .select-filter:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            padding: 9px 16px;
+            border-radius: var(--radius-md);
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-action:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-elevated);
+            border-color: #3d3d3d;
+        }
+
+        /* ─── Table Modern Styling ─────────────────────────────── */
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table.modern-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13.5px;
+        }
+
+        table.modern-table th {
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.6px;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        table.modern-table td {
+            padding: 15px 18px;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        table.modern-table tbody tr {
+            transition: var(--transition);
+        }
+
+        table.modern-table tbody tr.clickable-row {
+            cursor: pointer;
+        }
+
+        table.modern-table tbody tr:hover {
+            background-color: var(--bg-card-hover);
+        }
+
+        table.modern-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* User column avatar + details */
+        .user-col-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar-circle {
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-full);
+            background: linear-gradient(135deg, #374151, #1f2937);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--primary-light);
+            flex-shrink: 0;
+        }
+
+        .user-avatar-circle.is-admin {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: #ffffff;
+            border: none;
+        }
+
+        .user-meta-name {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .user-meta-id {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Role Badges */
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: var(--radius-full);
+            font-size: 11.5px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .role-badge.badge-admin {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary-light);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .role-badge.badge-user {
+            background: rgba(107, 114, 128, 0.15);
+            color: var(--text-secondary);
+            border: 1px solid rgba(107, 114, 128, 0.25);
+        }
+
+        .count-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3px 9px;
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            font-weight: 600;
+            background: var(--bg-elevated);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .table-action-link {
+            color: var(--primary-light);
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .table-action-link:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        .table-footer {
+            padding: 12px 18px;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12.5px;
+            color: var(--text-secondary);
+        }
+
+        /* ─── Empty & Loading States ───────────────────────────── */
+        .state-container {
+            padding: 48px 24px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .state-icon {
+            width: 48px;
+            height: 48px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .state-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .state-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            max-width: 360px;
+        }
+
+        .loader-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* ─── Conversations Cards / List ───────────────────────── */
+        .conversations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .conversation-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .conversation-card:hover {
+            transform: translateY(-2px);
+            border-color: #3a3a3a;
+            background-color: var(--bg-card-hover);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+        }
+
+        .conv-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .conv-card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .conv-card-id {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11.5px;
+            color: var(--text-muted);
+            background: var(--bg-elevated);
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            width: fit-content;
+        }
+
+        .btn-copy-sm {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 2px;
+            border-radius: 3px;
+        }
+
+        .btn-copy-sm:hover {
+            color: var(--text-main);
+        }
+
+        .conv-card-dates {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 10px;
+        }
+
+        .conv-date-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .conv-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 6px;
+        }
+
+        /* ─── Chat History View ────────────────────────────────── */
+        .chat-view-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 160px);
+            min-height: 520px;
+        }
+
+        .chat-view-header {
+            padding: 16px 20px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .chat-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .chat-header-title-block h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .chat-header-title-block p {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 2px;
+        }
+
+        .chat-history-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: #111111;
+        }
+
+        .chat-message-row {
+            display: flex;
+            gap: 12px;
+            max-width: 82%;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .chat-message-row.user-row {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .chat-message-row.assistant-row {
+            align-self: flex-start;
+        }
+
+        .message-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .chat-message-row.assistant-row .message-avatar {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: #ffffff;
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .chat-message-row.user-row .message-avatar {
+            background: #374151;
+            color: #e5e7eb;
+        }
+
+        .message-bubble {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .chat-message-row.user-row .message-bubble {
+            align-items: flex-end;
+        }
+
+        .message-meta {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 4px;
+        }
+
+        .message-content-box {
+            padding: 13px 18px;
+            border-radius: var(--radius-lg);
+            font-size: 14px;
+            line-height: 1.55;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .chat-message-row.assistant-row .message-content-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-top-left-radius: 4px;
+        }
+
+        .chat-message-row.user-row .message-content-box {
+            background: linear-gradient(135deg, #4338ca, #4f46e5);
+            color: #ffffff;
+            border-top-right-radius: 4px;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+        }
+
+        /* ─── Toast Notification ───────────────────────────────── */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: #242424;
+            border: 1px solid #383838;
+            color: #ffffff;
+            padding: 12px 18px;
+            border-radius: var(--radius-md);
+            font-size: 13.5px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            pointer-events: auto;
+            animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast.toast-error {
+            border-color: rgba(239, 68, 68, 0.5);
+            background: #2b1717;
+        }
+
+        .toast.toast-success {
+            border-color: rgba(16, 185, 129, 0.5);
+            background: #12281e;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ─── Mobile Responsiveness ────────────────────────────── */
+        @media (max-width: 900px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.mobile-open {
+                display: block;
+                opacity: 1;
+            }
+
+            .sidebar-close-btn {
+                display: block;
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+                width: 100vw;
+            }
+
+            .hamburger-btn {
+                display: block;
+            }
+
+            .content-area {
+                padding: 18px 16px;
+            }
+
+            .top-header {
+                padding: 0 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+
+            .chat-message-row {
+                max-width: 94%;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box-wrapper {
+                max-width: 100%;
+            }
+
+            .chat-view-container {
+                height: calc(100vh - 130px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <!-- Mobile Sidebar Overlay Backdrop -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- ─── Left Sidebar ───────────────────────────────────── -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="#dashboard" class="brand-wrapper">
+                    <div class="brand-logo">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <div class="brand-text-block">
+                        <span class="brand-title">AibyAI</span>
+                        <span class="brand-subtitle">Admin Panel</span>
+                    </div>
+                </a>
+                <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close Sidebar">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="sidebar-nav">
+                <span class="nav-label">Management</span>
+                
+                <a class="nav-item active" data-view="dashboard" id="navDashboard">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+
+                <a class="nav-item" data-view="users" id="navUsers">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                    <span>Users</span>
+                </a>
+
+                <a class="nav-item" data-view="conversations" id="navConversations">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <span>All Chats</span>
+                </a>
+            </nav>
+
+            <!-- Sidebar Footer with Current Admin & Links -->
+            <div class="sidebar-footer">
+                <div class="admin-profile-card">
+                    <div class="admin-avatar" id="adminAvatarInitial">A</div>
+                    <div class="admin-info">
+                        <div class="admin-name" id="adminProfileName">Admin</div>
+                        <div class="admin-role-badge">Super Admin</div>
+                    </div>
+                </div>
+
+                <a href="/" class="sidebar-btn btn-back-chat">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    <span>Back to Chat</span>
+                </a>
+
+                <button class="sidebar-btn btn-logout" id="logoutBtn">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ─── Main Content Wrapper ───────────────────────────── -->
+        <div class="main-wrapper">
+            <!-- Top Sticky Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle Navigation">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+
+                    <div class="header-breadcrumbs">
+                        <span class="breadcrumb-root">Admin</span>
+                        <span class="breadcrumb-sep">/</span>
+                        <span class="breadcrumb-active" id="headerViewTitle">Dashboard</span>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <div class="system-status-indicator" title="Auth Token Active">
+                        <span class="status-dot"></span>
+                        <span>Live</span>
+                    </div>
+
+                    <button class="btn-icon-refresh" id="refreshDataBtn" title="Refresh Current Data">
+                        <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Main Working Content Views -->
+            <main class="content-area">
+                
+                <!-- ════════════ 1. DASHBOARD VIEW ════════════ -->
+                <section class="view-pane active" id="viewDashboard">
+                    <div class="view-header">
+                        <div class="view-title-group">
+                            <h1 id="welcomeGreeting">System Overview</h1>
+                            <p>Real-time analytics and platform metrics for AibyAI</p>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <div class="stat-icon-wrapper">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                    </svg>
+                                </div>
+                                <span class="stat-badge">Users</span>
+                            </div>
+                            <div class="stat-body">
+                                <span class="stat-label">Total Users</span>
+                                <div class="stat-value" id="statTotalUsers">—</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <div class="stat-icon-wrapper">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                                    </svg>
+                                </div>
+                                <span class="stat-badge">Chats</span>
+                            </div>
+                            <div class="stat-body">
+                                <span class="stat-label">Total Conversations</span>
+                                <div class="stat-value" id="statTotalConversations">—</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <div class="stat-icon-wrapper">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                                    </svg>
+                                </div>
+                                <span class="stat-badge">Messages</span>
+                            </div>
+                            <div class="stat-body">
+                                <span class="stat-label">Total Messages</span>
+                                <div class="stat-value" id="statTotalMessages">—</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <div class="stat-icon-wrapper">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                    </svg>
+                                </div>
+                                <span class="stat-badge">Security</span>
+                            </div>
+                            <div class="stat-body">
+                                <span class="stat-label">Admin Accounts</span>
+                                <div class="stat-value" id="statTotalAdmins">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Split Recent Activity Section -->
+                    <div class="dashboard-content-split">
+                        <!-- Recent Conversations Panel -->
+                        <div class="panel-card">
+                            <div class="panel-header">
+                                <h2>
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Recent Conversations
+                                </h2>
+                                <button class="panel-action-btn" id="btnViewAllChats">
+                                    View All
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <ul class="activity-list" id="dashboardRecentChatsList">
+                                <li class="state-container">
+                                    <div class="loader-spinner"></div>
+                                    <span class="state-desc">Loading recent activity...</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Recently Registered Users Panel -->
+                        <div class="panel-card">
+                            <div class="panel-header">
+                                <h2>
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                                    </svg>
+                                    Recent Users
+                                </h2>
+                                <button class="panel-action-btn" id="btnViewAllUsers">
+                                    View All
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <ul class="activity-list" id="dashboardRecentUsersList">
+                                <li class="state-container">
+                                    <div class="loader-spinner"></div>
+                                    <span class="state-desc">Loading users...</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ════════════ 2. USERS VIEW ════════════ -->
+                <section class="view-pane" id="viewUsers">
+                    <div class="view-header">
+                        <div class="view-title-group">
+                            <h1>User Directory</h1>
+                            <p>Inspect registered accounts, conversation totals, and privileges</p>
+                        </div>
+                    </div>
+
+                    <!-- Search & Filter Bar -->
+                    <div class="filter-bar">
+                        <div class="search-box-wrapper">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            <input type="text" id="usersSearchInput" class="search-input" placeholder="Search by username or email...">
+                        </div>
+
+                        <div class="filter-controls">
+                            <select id="usersRoleFilter" class="select-filter">
+                                <option value="all">All Roles</option>
+                                <option value="admin">Admins Only</option>
+                                <option value="user">Regular Users</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Users Table -->
+                    <div class="table-container">
+                        <div class="table-responsive">
+                            <table class="modern-table">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Joined Date</th>
+                                        <th>Conversations</th>
+                                        <th style="text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr>
+                                        <td colspan="6">
+                                            <div class="state-container">
+                                                <div class="loader-spinner"></div>
+                                                <span class="state-desc">Fetching users list...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="table-footer">
+                            <span id="usersCountLabel">Showing 0 users</span>
+                            <span style="font-size: 11.5px; color: var(--text-muted);">💡 Click any row to view user's chats</span>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ════════════ 3. CONVERSATIONS VIEW ════════════ -->
+                <section class="view-pane" id="viewConversations">
+                    <div class="view-header">
+                        <div class="view-title-group">
+                            <h1 id="conversationsViewTitle">All Conversations</h1>
+                            <p id="conversationsViewSubtitle">Browse and inspect user threads and conversations</p>
+                        </div>
+                        <div id="userConversationsNavControls" style="display: none;">
+                            <button class="btn-secondary" id="btnBackToUsersList">
+                                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                                </svg>
+                                Back to All Users
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search Bar for Conversations -->
+                    <div class="filter-bar">
+                        <div class="search-box-wrapper">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            <input type="text" id="conversationsSearchInput" class="search-input" placeholder="Search by title or thread ID...">
+                        </div>
+                        <div class="filter-controls">
+                            <span class="stat-badge" id="conversationsCountBadge">0 Conversations</span>
+                        </div>
+                    </div>
+
+                    <!-- Grid of Conversation Cards -->
+                    <div class="conversations-grid" id="conversationsContainer">
+                        <div class="state-container" style="grid-column: 1 / -1;">
+                            <div class="loader-spinner"></div>
+                            <span class="state-desc">Loading conversations...</span>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ════════════ 4. CHAT HISTORY VIEW ════════════ -->
+                <section class="view-pane" id="viewChatHistory">
+                    <div class="chat-view-container">
+                        <!-- Chat Viewer Top Bar -->
+                        <div class="chat-view-header">
+                            <div class="chat-header-left">
+                                <button class="btn-secondary" id="btnBackToConversations">
+                                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                                    </svg>
+                                    Back
+                                </button>
+                                <div class="chat-header-title-block">
+                                    <h2 id="chatActiveTitle">Chat Inspection</h2>
+                                    <p>
+                                        <span>Thread ID:</span>
+                                        <span class="thread-badge" id="chatActiveThreadId">—</span>
+                                        <button class="btn-copy-sm" id="btnCopyActiveThreadId" title="Copy Thread ID">
+                                            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
+                                            </svg>
+                                        </button>
+                                    </p>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="stat-badge" id="chatMessageCountBadge">0 messages</span>
+                            </div>
+                        </div>
+
+                        <!-- Chat Messages Stream Area -->
+                        <div class="chat-history-scroll" id="chatHistoryScroll">
+                            <div class="state-container">
+                                <div class="loader-spinner"></div>
+                                <span class="state-desc">Loading conversation history...</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ─── Toast Container ───────────────────────────────────── -->
+    <div class="toast-container" id="toastContainer"></div>
+
+
+    <!-- ─── Inline Vanilla JavaScript ─────────────────────────── -->
+    <script>
+        (function () {
+            'use strict';
+
+            // ─── 1. Authentication & Guard ─────────────────────────
+            const token = localStorage.getItem('auth_token');
+            const userInfoRaw = localStorage.getItem('user_info');
+
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            let currentUser = null;
+            try {
+                currentUser = JSON.parse(userInfoRaw);
+            } catch (e) {
+                console.error('Invalid user_info stored in localStorage', e);
+            }
+
+            if (!currentUser || !currentUser.is_admin) {
+                alert('Access denied. Administrator privileges required.');
+                window.location.href = '/';
+                return;
+            }
+
+            // Populate Admin User Profile in UI
+            const adminName = currentUser.username || 'Admin';
+            const adminEmail = currentUser.email || '';
+            document.getElementById('adminProfileName').textContent = adminName;
+            document.getElementById('adminAvatarInitial').textContent = adminName.charAt(0).toUpperCase();
+            document.getElementById('welcomeGreeting').textContent = `Welcome back, ${adminName}`;
+
+            // ─── 2. State & Cache ──────────────────────────────────
+            const state = {
+                currentView: 'dashboard',
+                users: [],
+                allConversations: [],
+                currentUserConversations: [],
+                viewingUserId: null,
+                viewingUserObj: null,
+                activeThreadId: null,
+                stats: null,
+                lastConversationListSource: 'all' // 'all' or 'user'
+            };
+
+            // ─── 3. HTTP Client with Auto-Auth & 401 Interceptor ────
+            async function apiFetch(url, options = {}) {
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    ...(options.headers || {})
+                };
+
+                try {
+                    const response = await fetch(url, {
+                        ...options,
+                        headers
+                    });
+
+                    if (response.status === 401) {
+                        showToast('Session expired. Redirecting to login...', 'error');
+                        localStorage.removeItem('auth_token');
+                        localStorage.removeItem('user_info');
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 1200);
+                        throw new Error('Unauthorized');
+                    }
+
+                    return response;
+                } catch (err) {
+                    console.error('API Fetch Error:', url, err);
+                    throw err;
+                }
+            }
+
+            // ─── 4. Toast Notifications ────────────────────────────
+            function showToast(message, type = 'info') {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+
+                let iconSvg = '';
+                if (type === 'success') {
+                    iconSvg = `<svg width="16" height="16" fill="none" stroke="#10b981" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
+                } else if (type === 'error') {
+                    iconSvg = `<svg width="16" height="16" fill="none" stroke="#ef4444" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>`;
+                } else {
+                    iconSvg = `<svg width="16" height="16" fill="none" stroke="#818cf8" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+                }
+
+                toast.innerHTML = `${iconSvg}<span>${escapeHtml(message)}</span>`;
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.style.transition = 'opacity 0.3s, transform 0.3s';
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(10px)';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3500);
+            }
+
+            // ─── 5. Helper Utilities ───────────────────────────────
+            function escapeHtml(str) {
+                if (str === null || str === undefined) return '';
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function formatDate(isoStr) {
+                if (!isoStr) return '—';
+                try {
+                    const date = new Date(isoStr);
+                    if (isNaN(date.getTime())) return isoStr;
+                    return date.toLocaleDateString(undefined, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                } catch (e) {
+                    return isoStr;
+                }
+            }
+
+            function formatDateTime(isoStr) {
+                if (!isoStr) return '—';
+                try {
+                    const date = new Date(isoStr);
+                    if (isNaN(date.getTime())) return isoStr;
+                    return date.toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                } catch (e) {
+                    return isoStr;
+                }
+            }
+
+            function copyToClipboard(text, successMsg = 'Copied to clipboard!') {
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        showToast(successMsg, 'success');
+                    }).catch(() => fallbackCopy(text, successMsg));
+                } else {
+                    fallbackCopy(text, successMsg);
+                }
+            }
+
+            function fallbackCopy(text, successMsg) {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-9999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast(successMsg, 'success');
+                } catch (err) {
+                    showToast('Failed to copy', 'error');
+                }
+                document.body.removeChild(textArea);
+            }
+
+            // ─── 6. View Routing & Navigation ──────────────────────
+            const viewPanes = {
+                dashboard: document.getElementById('viewDashboard'),
+                users: document.getElementById('viewUsers'),
+                conversations: document.getElementById('viewConversations'),
+                chatHistory: document.getElementById('viewChatHistory')
+            };
+
+            const navItems = {
+                dashboard: document.getElementById('navDashboard'),
+                users: document.getElementById('navUsers'),
+                conversations: document.getElementById('navConversations')
+            };
+
+            const headerViewTitle = document.getElementById('headerViewTitle');
+
+            function switchView(viewName, titleOverride = null) {
+                state.currentView = viewName;
+
+                // Toggle views
+                Object.keys(viewPanes).forEach(key => {
+                    if (key === viewName) {
+                        viewPanes[key].classList.add('active');
+                    } else {
+                        viewPanes[key].classList.remove('active');
+                    }
+                });
+
+                // Update active nav item
+                Object.keys(navItems).forEach(key => {
+                    if (key === viewName) {
+                        navItems[key].classList.add('active');
+                    } else {
+                        navItems[key].classList.remove('active');
+                    }
+                });
+
+                // Update Header Breadcrumb Title
+                const titles = {
+                    dashboard: 'Dashboard',
+                    users: 'Users Directory',
+                    conversations: titleOverride || 'Conversations',
+                    chatHistory: titleOverride || 'Chat History'
+                };
+                headerViewTitle.textContent = titles[viewName] || 'Dashboard';
+
+                // Close mobile sidebar if open
+                closeMobileSidebar();
+
+                // Trigger data fetches based on view
+                if (viewName === 'dashboard') {
+                    loadDashboardData();
+                } else if (viewName === 'users') {
+                    loadUsersData();
+                } else if (viewName === 'conversations' && state.lastConversationListSource === 'all') {
+                    loadAllConversations();
+                }
+            }
+
+            // ─── 7. Mobile Sidebar Drawer Handlers ─────────────────
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+
+            function openMobileSidebar() {
+                sidebar.classList.add('mobile-open');
+                sidebarOverlay.classList.add('mobile-open');
+            }
+
+            function closeMobileSidebar() {
+                sidebar.classList.remove('mobile-open');
+                sidebarOverlay.classList.remove('mobile-open');
+            }
+
+            hamburgerBtn.addEventListener('click', openMobileSidebar);
+            sidebarCloseBtn.addEventListener('click', closeMobileSidebar);
+            sidebarOverlay.addEventListener('click', closeMobileSidebar);
+
+            // ─── 8. Sidebar Nav Listeners ──────────────────────────
+            document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const targetView = item.dataset.view;
+                    if (targetView === 'conversations') {
+                        state.lastConversationListSource = 'all';
+                        state.viewingUserId = null;
+                        state.viewingUserObj = null;
+                    }
+                    switchView(targetView);
+                });
+            });
+
+            // Quick links on dashboard panels
+            document.getElementById('btnViewAllUsers').addEventListener('click', () => {
+                switchView('users');
+            });
+
+            document.getElementById('btnViewAllChats').addEventListener('click', () => {
+                state.lastConversationListSource = 'all';
+                state.viewingUserId = null;
+                switchView('conversations');
+            });
+
+            // Refresh button
+            const refreshBtn = document.getElementById('refreshDataBtn');
+            refreshBtn.addEventListener('click', async () => {
+                refreshBtn.classList.add('spinning');
+                try {
+                    if (state.currentView === 'dashboard') {
+                        await loadDashboardData();
+                    } else if (state.currentView === 'users') {
+                        await loadUsersData();
+                    } else if (state.currentView === 'conversations') {
+                        if (state.viewingUserId) {
+                            await loadUserConversations(state.viewingUserId, state.viewingUserObj);
+                        } else {
+                            await loadAllConversations();
+                        }
+                    } else if (state.currentView === 'chatHistory' && state.activeThreadId) {
+                        await loadChatHistory(state.activeThreadId);
+                    }
+                    showToast('Data refreshed successfully', 'success');
+                } catch (e) {
+                    showToast('Failed to refresh data', 'error');
+                } finally {
+                    setTimeout(() => refreshBtn.classList.remove('spinning'), 500);
+                }
+            });
+
+            // Logout Button
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                if (confirm('Are you sure you want to log out of Admin Portal?')) {
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('user_info');
+                    window.location.href = '/login';
+                }
+            });
+
+            // ─── 9. API Data Loading: Dashboard ────────────────────
+            async function loadDashboardData() {
+                // First attempt: fetch /admin/stats
+                let statsData = null;
+                let statsSuccess = false;
+
+                try {
+                    const statsRes = await apiFetch('/admin/stats');
+                    if (statsRes.ok) {
+                        statsData = await statsRes.json();
+                        statsSuccess = true;
+                    }
+                } catch (err) {
+                    console.warn('/admin/stats endpoint not available, will compute stats from users and conversations data.');
+                }
+
+                // Also fetch users and conversations for recent lists and fallback stats
+                const [usersRes, convsRes] = await Promise.allSettled([
+                    fetchUsersList(),
+                    fetchAllConversationsList()
+                ]);
+
+                const usersList = usersRes.status === 'fulfilled' ? usersRes.value : [];
+                const convsList = convsRes.status === 'fulfilled' ? convsRes.value : [];
+
+                state.users = usersList;
+                state.allConversations = convsList;
+
+                // Update Stats Cards
+                const totalUsers = statsSuccess && statsData.total_users !== undefined 
+                    ? statsData.total_users 
+                    : usersList.length;
+
+                const totalConversations = statsSuccess && statsData.total_conversations !== undefined 
+                    ? statsData.total_conversations 
+                    : convsList.length;
+
+                let totalMessages = '—';
+                if (statsSuccess && statsData.total_messages !== undefined) {
+                    totalMessages = statsData.total_messages;
+                } else {
+                    // Estimate from conv counts if available
+                    let sum = 0;
+                    let hasCounts = false;
+                    convsList.forEach(c => {
+                        if (c.message_count !== undefined) {
+                            sum += (c.message_count || 0);
+                            hasCounts = true;
+                        }
+                    });
+                    totalMessages = hasCounts ? sum : (totalConversations > 0 ? `${totalConversations * 2}+` : '0');
+                }
+
+                const totalAdmins = usersList.filter(u => u.is_admin).length || 1;
+
+                document.getElementById('statTotalUsers').textContent = totalUsers.toLocaleString();
+                document.getElementById('statTotalConversations').textContent = totalConversations.toLocaleString();
+                document.getElementById('statTotalMessages').textContent = typeof totalMessages === 'number' ? totalMessages.toLocaleString() : totalMessages;
+                document.getElementById('statTotalAdmins').textContent = totalAdmins.toLocaleString();
+
+                // Render Recent Conversations in Dashboard
+                renderDashboardRecentConversations(convsList.slice(0, 6));
+
+                // Render Recent Users in Dashboard
+                renderDashboardRecentUsers(usersList.slice(0, 6));
+            }
+
+            function renderDashboardRecentConversations(convs) {
+                const container = document.getElementById('dashboardRecentChatsList');
+                if (!convs || convs.length === 0) {
+                    container.innerHTML = `
+                        <li class="state-container" style="padding: 30px 20px;">
+                            <span class="state-title">No conversations yet</span>
+                            <span class="state-desc">Chats created by users will appear here.</span>
+                        </li>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = convs.map(c => `
+                    <li class="activity-item" data-thread-id="${escapeHtml(c.thread_id)}">
+                        <div class="activity-left">
+                            <div class="activity-avatar">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                                </svg>
+                            </div>
+                            <div class="activity-details">
+                                <span class="activity-title">${escapeHtml(c.title || 'Untitled Conversation')}</span>
+                                <div class="activity-meta">
+                                    <span class="thread-badge">#${escapeHtml((c.thread_id || '').substring(0, 10))}...</span>
+                                    <span>•</span>
+                                    <span>${formatDateTime(c.updated_at || c.created_at)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="activity-time">
+                            <button class="table-action-link" style="font-size: 12px;">View &rarr;</button>
+                        </div>
+                    </li>
+                `).join('');
+
+                container.querySelectorAll('.activity-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const threadId = item.dataset.threadId;
+                        openChatHistory(threadId);
+                    });
+                });
+            }
+
+            function renderDashboardRecentUsers(users) {
+                const container = document.getElementById('dashboardRecentUsersList');
+                if (!users || users.length === 0) {
+                    container.innerHTML = `
+                        <li class="state-container" style="padding: 30px 20px;">
+                            <span class="state-title">No users registered</span>
+                            <span class="state-desc">Registered users will be listed here.</span>
+                        </li>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = users.map(u => `
+                    <li class="activity-item" data-user-id="${escapeHtml(u.id)}">
+                        <div class="activity-left">
+                            <div class="user-avatar-circle ${u.is_admin ? 'is-admin' : ''}">
+                                ${(u.username || 'U').charAt(0).toUpperCase()}
+                            </div>
+                            <div class="activity-details">
+                                <span class="activity-title">${escapeHtml(u.username)}</span>
+                                <div class="activity-meta">
+                                    <span>${escapeHtml(u.email)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="activity-time">
+                            <span class="role-badge ${u.is_admin ? 'badge-admin' : 'badge-user'}">
+                                ${u.is_admin ? 'Admin' : 'User'}
+                            </span>
+                        </div>
+                    </li>
+                `).join('');
+
+                container.querySelectorAll('.activity-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const userId = item.dataset.userId;
+                        const userObj = state.users.find(u => String(u.id) === String(userId));
+                        if (userObj) {
+                            loadUserConversations(userId, userObj);
+                        }
+                    });
+                });
+            }
+
+            // ─── 10. API Data Loading: Users ───────────────────────
+            async function fetchUsersList() {
+                try {
+                    const res = await apiFetch('/admin/users');
+                    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+                    const data = await res.json();
+                    return Array.isArray(data) ? data : (data.users || []);
+                } catch (e) {
+                    console.error('Failed to fetch /admin/users', e);
+                    return [];
+                }
+            }
+
+            async function loadUsersData() {
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="state-container">
+                                <div class="loader-spinner"></div>
+                                <span class="state-desc">Loading users...</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                const users = await fetchUsersList();
+                state.users = users;
+                renderUsersTable();
+            }
+
+            function renderUsersTable() {
+                const tbody = document.getElementById('usersTableBody');
+                const countLabel = document.getElementById('usersCountLabel');
+                const searchTerm = (document.getElementById('usersSearchInput').value || '').trim().toLowerCase();
+                const roleFilter = document.getElementById('usersRoleFilter').value;
+
+                // Filter users
+                const filtered = state.users.filter(user => {
+                    const matchesSearch = !searchTerm || 
+                        (user.username && user.username.toLowerCase().includes(searchTerm)) ||
+                        (user.email && user.email.toLowerCase().includes(searchTerm));
+                    
+                    let matchesRole = true;
+                    if (roleFilter === 'admin') matchesRole = !!user.is_admin;
+                    if (roleFilter === 'user') matchesRole = !user.is_admin;
+
+                    return matchesSearch && matchesRole;
+                });
+
+                countLabel.textContent = `Showing ${filtered.length} of ${state.users.length} users`;
+
+                if (filtered.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6">
+                                <div class="state-container">
+                                    <svg class="state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    </svg>
+                                    <span class="state-title">No matching users</span>
+                                    <span class="state-desc">Try changing search query or role filter.</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = filtered.map(u => `
+                    <tr class="clickable-row" data-user-id="${escapeHtml(u.id)}">
+                        <td>
+                            <div class="user-col-wrapper">
+                                <div class="user-avatar-circle ${u.is_admin ? 'is-admin' : ''}">
+                                    ${(u.username || 'U').charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div class="user-meta-name">${escapeHtml(u.username)}</div>
+                                    <div class="user-meta-id">ID: ${escapeHtml(u.id)}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${escapeHtml(u.email)}</td>
+                        <td>
+                            <span class="role-badge ${u.is_admin ? 'badge-admin' : 'badge-user'}">
+                                ${u.is_admin ? 'Admin' : 'User'}
+                            </span>
+                        </td>
+                        <td>${formatDate(u.created_at)}</td>
+                        <td>
+                            <span class="count-pill">
+                                ${u.conversation_count !== undefined ? u.conversation_count : '—'}
+                            </span>
+                        </td>
+                        <td style="text-align: right;">
+                            <button class="table-action-link btn-view-user-chats" data-user-id="${escapeHtml(u.id)}">
+                                View Chats &rarr;
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                // Row click handlers -> Open that user's conversations
+                tbody.querySelectorAll('.clickable-row').forEach(row => {
+                    row.addEventListener('click', (e) => {
+                        const userId = row.dataset.userId;
+                        const userObj = state.users.find(u => String(u.id) === String(userId));
+                        if (userObj) {
+                            loadUserConversations(userId, userObj);
+                        }
+                    });
+                });
+            }
+
+            document.getElementById('usersSearchInput').addEventListener('input', renderUsersTable);
+            document.getElementById('usersRoleFilter').addEventListener('change', renderUsersTable);
+
+            // ─── 11. API Data Loading: Conversations ────────────────
+            async function fetchAllConversationsList() {
+                try {
+                    const res = await apiFetch('/admin/conversations');
+                    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+                    const data = await res.json();
+                    return Array.isArray(data) ? data : (data.conversations || []);
+                } catch (e) {
+                    console.error('Failed to fetch /admin/conversations', e);
+                    return [];
+                }
+            }
+
+            async function loadAllConversations() {
+                state.lastConversationListSource = 'all';
+                state.viewingUserId = null;
+                state.viewingUserObj = null;
+
+                document.getElementById('conversationsViewTitle').textContent = 'All Conversations';
+                document.getElementById('conversationsViewSubtitle').textContent = 'Global conversations across all users';
+                document.getElementById('userConversationsNavControls').style.display = 'none';
+
+                const container = document.getElementById('conversationsContainer');
+                container.innerHTML = `
+                    <div class="state-container" style="grid-column: 1 / -1;">
+                        <div class="loader-spinner"></div>
+                        <span class="state-desc">Loading conversations...</span>
+                    </div>
+                `;
+
+                const convs = await fetchAllConversationsList();
+                state.allConversations = convs;
+                renderConversationsList(convs);
+            }
+
+            async function loadUserConversations(userId, userObj) {
+                state.lastConversationListSource = 'user';
+                state.viewingUserId = userId;
+                state.viewingUserObj = userObj;
+
+                switchView('conversations', `Chats: ${userObj.username}`);
+
+                document.getElementById('conversationsViewTitle').textContent = `Conversations for ${userObj.username}`;
+                document.getElementById('conversationsViewSubtitle').textContent = `Email: ${userObj.email} • User ID: ${userObj.id}`;
+                document.getElementById('userConversationsNavControls').style.display = 'block';
+
+                const container = document.getElementById('conversationsContainer');
+                container.innerHTML = `
+                    <div class="state-container" style="grid-column: 1 / -1;">
+                        <div class="loader-spinner"></div>
+                        <span class="state-desc">Loading user's conversations...</span>
+                    </div>
+                `;
+
+                try {
+                    const res = await apiFetch(`/admin/conversations/${userId}`);
+                    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+                    const data = await res.json();
+                    const list = Array.isArray(data) ? data : (data.conversations || []);
+                    state.currentUserConversations = list;
+                    renderConversationsList(list);
+                } catch (err) {
+                    showToast('Failed to load user conversations', 'error');
+                    container.innerHTML = `
+                        <div class="state-container" style="grid-column: 1 / -1;">
+                            <span class="state-title">Failed to load conversations</span>
+                            <span class="state-desc">${escapeHtml(err.message)}</span>
+                        </div>
+                    `;
+                }
+            }
+
+            // Back button from User Conversations view to Users List
+            document.getElementById('btnBackToUsersList').addEventListener('click', () => {
+                switchView('users');
+            });
+
+            function renderConversationsList(convsList) {
+                const container = document.getElementById('conversationsContainer');
+                const badge = document.getElementById('conversationsCountBadge');
+                const searchTerm = (document.getElementById('conversationsSearchInput').value || '').trim().toLowerCase();
+
+                const filtered = convsList.filter(c => {
+                    if (!searchTerm) return true;
+                    return (c.title && c.title.toLowerCase().includes(searchTerm)) ||
+                           (c.thread_id && c.thread_id.toLowerCase().includes(searchTerm));
+                });
+
+                badge.textContent = `${filtered.length} Conversations`;
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                        <div class="state-container" style="grid-column: 1 / -1; padding: 60px 20px;">
+                            <svg class="state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                            <span class="state-title">No conversations found</span>
+                            <span class="state-desc">${searchTerm ? 'Try a different search term.' : 'This list does not have any active chats yet.'}</span>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = filtered.map(c => `
+                    <div class="conversation-card" data-thread-id="${escapeHtml(c.thread_id)}">
+                        <div class="conv-card-top">
+                            <div class="conv-card-title">${escapeHtml(c.title || 'Untitled Chat')}</div>
+                        </div>
+
+                        <div class="conv-card-id">
+                            <span>ID: ${(c.thread_id || '').substring(0, 14)}...</span>
+                            <button class="btn-copy-sm copy-thread-btn" data-thread-id="${escapeHtml(c.thread_id)}" title="Copy Thread ID">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="conv-card-dates">
+                            <div class="conv-date-row">
+                                <span>Created:</span>
+                                <span>${formatDate(c.created_at)}</span>
+                            </div>
+                            <div class="conv-date-row">
+                                <span>Last Activity:</span>
+                                <span>${formatDateTime(c.updated_at || c.created_at)}</span>
+                            </div>
+                        </div>
+
+                        <div class="conv-card-footer">
+                            <span class="stat-badge">
+                                ${c.message_count !== undefined ? `${c.message_count} msgs` : 'Messages'}
+                            </span>
+                            <button class="table-action-link">Inspect Chat &rarr;</button>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Click handlers on cards
+                container.querySelectorAll('.conversation-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        if (e.target.closest('.copy-thread-btn')) return;
+                        const threadId = card.dataset.threadId;
+                        openChatHistory(threadId);
+                    });
+                });
+
+                // Copy Thread ID buttons
+                container.querySelectorAll('.copy-thread-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        copyToClipboard(btn.dataset.threadId, 'Thread ID copied!');
+                    });
+                });
+            }
+
+            document.getElementById('conversationsSearchInput').addEventListener('input', () => {
+                const list = state.lastConversationListSource === 'user' 
+                    ? state.currentUserConversations 
+                    : state.allConversations;
+                renderConversationsList(list);
+            });
+
+            // ─── 12. API Data Loading: Chat History ────────────────
+            async function openChatHistory(threadId) {
+                state.activeThreadId = threadId;
+                switchView('chatHistory', `Chat #${threadId.substring(0, 8)}`);
+
+                document.getElementById('chatActiveThreadId').textContent = threadId;
+                document.getElementById('btnCopyActiveThreadId').onclick = () => {
+                    copyToClipboard(threadId, 'Thread ID copied!');
+                };
+
+                await loadChatHistory(threadId);
+            }
+
+            async function loadChatHistory(threadId) {
+                const scrollContainer = document.getElementById('chatHistoryScroll');
+                const badge = document.getElementById('chatMessageCountBadge');
+
+                scrollContainer.innerHTML = `
+                    <div class="state-container">
+                        <div class="loader-spinner"></div>
+                        <span class="state-desc">Fetching messages for thread...</span>
+                    </div>
+                `;
+
+                try {
+                    const res = await apiFetch(`/admin/history/${encodeURIComponent(threadId)}`);
+                    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+                    const data = await res.json();
+                    const messages = Array.isArray(data) ? data : (data.messages || []);
+
+                    badge.textContent = `${messages.length} messages`;
+
+                    if (messages.length === 0) {
+                        scrollContainer.innerHTML = `
+                            <div class="state-container" style="margin: auto;">
+                                <svg class="state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
+                                <span class="state-title">No messages in this chat</span>
+                                <span class="state-desc">This conversation exists but does not have recorded message logs.</span>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    scrollContainer.innerHTML = messages.map(msg => {
+                        const isUser = (msg.role || '').toLowerCase() === 'user';
+                        const roleLabel = isUser ? 'User' : 'AibyAI';
+                        const avatarText = isUser ? 'U' : 'AI';
+
+                        return `
+                            <div class="chat-message-row ${isUser ? 'user-row' : 'assistant-row'}">
+                                <div class="message-avatar">
+                                    ${avatarText}
+                                </div>
+                                <div class="message-bubble">
+                                    <div class="message-meta">
+                                        <span style="font-weight: 600;">${roleLabel}</span>
+                                        <span>•</span>
+                                        <span>${formatDateTime(msg.created_at)}</span>
+                                    </div>
+                                    <div class="message-content-box">${escapeHtml(msg.content || '')}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    // Scroll down to latest message
+                    scrollContainer.scrollTop = scrollContainer.scrollHeight;
+
+                } catch (err) {
+                    showToast('Failed to load chat history', 'error');
+                    scrollContainer.innerHTML = `
+                        <div class="state-container" style="margin: auto;">
+                            <span class="state-title">Error loading chat history</span>
+                            <span class="state-desc">${escapeHtml(err.message)}</span>
+                        </div>
+                    `;
+                }
+            }
+
+            // Back button from Chat History View
+            document.getElementById('btnBackToConversations').addEventListener('click', () => {
+                if (state.lastConversationListSource === 'user' && state.viewingUserId) {
+                    switchView('conversations', `Chats: ${state.viewingUserObj ? state.viewingUserObj.username : 'User'}`);
+                } else {
+                    state.lastConversationListSource = 'all';
+                    switchView('conversations', 'All Conversations');
+                }
+            });
+
+            // ─── 13. Initial Boot ──────────────────────────────────
+            loadDashboardData();
+
+        })();
+    </script>
+</body>
+</html>
