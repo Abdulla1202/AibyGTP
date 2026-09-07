@@ -4,148 +4,122 @@ from dotenv import load_dotenv
 import os
 import shutil
 import certifi
+import logging
+
+# Setup basic logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
 os.environ["SSL_CERT_FILE"] = certifi.where()
 os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.embeddings import Embeddings
 
-
 from pypdf import PdfReader
 import docx2txt
 
-
 Path("uploads").mkdir(exist_ok=True)
 
+# ─── 100% LOCAL EMBEDDINGS (Zero API Calls) ───────────────────────
+
+class LocalEmbeddings(Embeddings):
+    """
+    Strictly local embeddings using ChromaDB's default model.
+    This class does NOT use any Google/OpenAI APIs.
+    """
+    def __init__(self):
+        from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
+        self._ef = DefaultEmbeddingFunction()
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        logger.info(f"Embedding {len(texts)} documents locally...")
+        return self._ef(texts)
+
+    def embed_query(self, text: str) -> List[float]:
+        return self._ef([text])[0]
 
 def _init_vectorstore():
-    """Initialize vectorstore with Google Embeddings for higher quality retrieval."""
+    """Initialize vectorstore using ONLY LocalEmbeddings."""
     db_path = Path("chroma_db")
 
-    # Wipe old DB if it doesn't have the marker for Google Embeddings
-    marker = db_path / ".google_embeddings"
-    if db_path.exists() and not marker.exists():
+    # FORCE WIPE: To ensure no remnants of Google Embeddings exist
+    if db_path.exists():
         shutil.rmtree(db_path, ignore_errors=True)
-        print("[OK] Cleared old chroma_db to switch to Google Embeddings")
+        logger.info("Forced wipe of chroma_db to ensure local embeddings are used.")
 
     db_path.mkdir(exist_ok=True)
-    marker.touch()
 
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    # Use the LocalEmbeddings class defined above
+    embeddings = LocalEmbeddings()
+
     return Chroma(
         collection_name="agentic_chatbot_docs",
         embedding_function=embeddings,
         persist_directory="chroma_db"
     )
 
-
+# Global vectorstore instance
 vectorstore = _init_vectorstore()
 
+# ─── File Processing ─────────────────────────────────────────────
 
-# ─── File Reading ─────────────────────────────────────────────
+def clean_text(text: str) -> str:
+    if not text: return ""
+    import re
+    return re.sub(r'\s+', ' ', text).strip()
 
 def read_file_text(file_path: str) -> str:
-    path = Path(file_path)
+    path = Path(file_//file_path) if isinstance(file_path, str) else Path(file_path)
     suffix = path.suffix.lower()
-
-    if suffix == ".pdf":
-        reader = PdfReader(file_path)
-        text = ""
-        for page in reader.pages:
-            page_text = page.extract_text() or ""
-            text += page_text + "\n"
-        return text
-
-    if suffix == ".docx":
-        return docx2txt.process(file_path)
-
-    if suffix == ".csv":
-        import csv
-        with open(file_path, mode='r', encoding='utf-8', errors='ignore') as f:
-            reader = csv.reader(f)
-            rows = list(reader)
-            if not rows:
-                return ""
-            header = rows[0]
-            data_rows = rows[1:]
-            text_output = []
-            for row in data_rows:
-                row_str = " | ".join([f"{header[i]}: {val}" for i, val in enumerate(row) if i < len(header)])
-                text_output.append(row_str)
-            return "\n".join(text_output)
-
-    if suffix in [".txt", ".md", ".py"]:
-        return path.read_text(encoding="utf-8", errors="ignore")
-
-    raise ValueError("Unsupported file type. Upload PDF, DOCX, TXT, MD, PY, or CSV.")
-
-
-# ─── Add Document ─────────────────────────────────────────────
+    try:
+        if suffix == ".pdf":
+            reader = PdfReader(file_path)
+            return "\n".join([page.extract_text() or "" for page in reader.pages])
+        if suffix == ".docx":
+            return docx2txt.process(file_path)
+        if suffix in [".txt", ".md", ".py", ".csv"]:
+            return path.read_text(encoding="utf-8", errors="ignore")
+    except Exception as e:
+        logger.error(f"Read error: {e}")
+        return ""
+    raise ValueError("Unsupported file type.")
 
 def add_document_to_rag(file_path: str, thread_id: str):
-    text = read_file_text(file_path)
+    try:
+        logger.info(f"Processing locally: {file_path} (Thread: {thread_id})")
+        text = clean_text(read_file_text(file_path))
+        if not text: return {"success": False, "error": "No text found"}
 
-    if not text.strip():
-        raise ValueError("No text could be extracted from this file.")
+        splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        chunks = splitter.split_text(text)
 
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=700,
-        chunk_overlap=200
-    )
+        docs = [
+            Document(page_content=c, metadata={"thread_id": thread_id, "source": Path(file_path).name})
+            for c in chunks
+        ]
 
-    chunks = splitter.split_text(text)
+        vectorstore.add_documents(docs)
+        logger.info(f"Successfully added {len(docs)} chunks locally.")
+        return {"success": True, "filename": Path(file_path).name, "chunks": len(docs)}
+    except Exception as e:
+        logger.error(f"RAG Error: {e}")
+        return {"success": False, "error": str(e)}
 
-    docs: List[Document] = [
-        Document(
-            page_content=chunk,
-            metadata={
-                "thread_id": thread_id,
-                "source": Path(file_path).name
-            }
-        )
-        for chunk in chunks
-    ]
-
-    vectorstore.add_documents(docs)
-
-    return {
-        "filename": Path(file_path).name,
-        "chunks": len(docs)
-    }
-
-
-# ─── Search Documents ────────────────────────────────────────
-
-def retrieve_from_rag(query: str, thread_id: str, k: int = 4) -> str:
-    # First try thread-specific docs
-    docs = vectorstore.similarity_search(
-        query,
-        k=k,
-        filter={"thread_id": thread_id}
-    )
-
-    # Fallback: search ALL uploaded docs if thread-specific found nothing
-    if not docs:
-        try:
+def retrieve_from_rag(query: str, thread_id: str, k: int = 5) -> str:
+    try:
+        # Search locally
+        docs = vectorstore.similarity_search(query, k=k, filter={"thread_id": thread_id})
+        if not docs:
             docs = vectorstore.similarity_search(query, k=k)
-        except Exception:
-            docs = []
 
-    if not docs:
-        return "No relevant uploaded document content found. Please upload a document first."
+        if not docs: return "No documents found."
 
-    results = []
-
-    for i, doc in enumerate(docs, start=1):
-        source = doc.metadata.get("source", "uploaded document")
-        results.append(
-            f"[Source {i}: {source}]\n{doc.page_content}"
-        )
-
-    return "\n\n".join(results)
+        return "\n\n".join([f"[Source {i+1}: {d.metadata.get('source')}]\n{clean_text(d.page_content)}" for i, d in enumerate(docs)])
+    except Exception as e:
+        logger.error(f"Retrieval Error: {e}")
+        return "Error searching documents."
