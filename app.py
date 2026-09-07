@@ -297,16 +297,16 @@ async def upload_document(
             "message": f"Uploaded {filename} successfully! We are now processing it in the background. You can start chatting soon."
         })
 
-        except Exception as e:
-            import logging
-            logging.error(f"Upload Error: {str(e)}", exc_info=True)
-            return JSONResponse(
-                {
-                    "success": False,
-                    "message": str(e)
-                },
-                status_code=500
-            )
+    except Exception as e:
+        import logging
+        logging.error(f"Upload Error: {str(e)}", exc_info=True)
+        return JSONResponse(
+            {
+                "success": False,
+                "message": str(e)
+            },
+            status_code=500
+        )
 
 
 
