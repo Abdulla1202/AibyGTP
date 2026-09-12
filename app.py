@@ -276,10 +276,10 @@ async def upload_document(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     thread_id: str = Form(...),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_optional_current_user)
 ):
     try:
-        user_id = current_user["user_id"]
+        user_id = current_user["user_id"] if current_user else None
         allowed_extensions = [".pdf", ".docx", ".txt", ".md", ".py", ".csv"]
 
         filename = file.filename or "uploaded_file"
@@ -422,7 +422,7 @@ async def chat_stream(request: Request, current_user: dict = Depends(get_optiona
     if user_id is None:
         # If guest, count messages for this thread
         msg_count = count_messages_in_thread(thread_id)
-        if msg_count >= 5:
+        if msg_count >= 10:
             return JSONResponse(
                 {"error": "limit_reached", "message": "Aapki free limit khatam ho gayi hai. Aage baat karne ke liye please login karein."},
                 status_code=403

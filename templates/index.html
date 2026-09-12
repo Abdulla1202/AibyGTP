@@ -741,6 +741,7 @@
         // Chat logic
         function newChat() {
             currentThreadId = generateUUID();
+            localStorage.setItem('guest_thread_id', currentThreadId);
             document.getElementById('chatContainer').innerHTML = `
                 <div class="welcome-screen" id="welcomeScreen">
                     <div class="welcome-title">How can I help you today?</div>
@@ -1106,7 +1107,8 @@
                     }
                     throw new Error('Forbidden');
                 } else if (!response.ok) {
-                    throw new Error('API Error');
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || errData.detail || 'API Error');
                 }
 
                 const reader = response.body.getReader();
@@ -1187,8 +1189,9 @@
             } catch (e) {
                 console.error(e);
                 removeThinkingBubble();
-                showToast('Failed to send message', 'error');
-                assistantContentDiv.innerHTML = '<span style="color: #ef4444;">Connection error.</span>';
+                const errMsg = e.message || 'Connection error';
+                showToast(errMsg, 'error');
+                assistantContentDiv.innerHTML = `<span style="color: #ef4444;">${errMsg}</span>`;
             } finally {
                 isGenerating = false;
                 removeThinkingBubble();
@@ -1275,8 +1278,14 @@
                 });
                 
                 if (response.status === 401) {
-                    showToast('Please login to upload files.', 'info');
+                    // This should theoretically not happen now that guests are allowed,
+                    // but we keep a safety check.
+                    removeUploadIndicator();
+                    showToast('Session expired. Please login again.', 'info');
                     return;
+                } else if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.message || 'Upload failed');
                 }
                 const data = await response.json();
                 
@@ -1310,10 +1319,8 @@
                 }
             } catch (e) {
                 console.error(e);
-                statusEl.textContent = 'Error';
-                statusEl.style.color = '#ef4444';
-                removeBtn.style.display = 'block';
-                showToast('Upload error', 'error');
+                removeUploadIndicator();
+                showToast(e.message || 'Upload error', 'error');
             }
             event.target.value = '';
         }
