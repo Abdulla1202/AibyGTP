@@ -935,7 +935,8 @@
                         },
                         body: JSON.stringify({
                             username: username,
-                            password: password
+                            password: password,
+                            guest_thread_id: localStorage.getItem('guest_thread_id')
                         })
                     });
 
@@ -960,6 +961,7 @@
                     // Success: Store credentials
                     if (data.token) {
                         localStorage.setItem('auth_token', data.token);
+                        localStorage.removeItem('guest_thread_id');
                     }
                     if (data.user) {
                         localStorage.setItem('user_info', JSON.stringify(data.user));
@@ -1042,7 +1044,8 @@
                         body: JSON.stringify({
                             username: username,
                             email: email,
-                            password: password
+                            password: password,
+                            guest_thread_id: localStorage.getItem('guest_thread_id')
                         })
                     });
 
@@ -1067,6 +1070,7 @@
                     // Success: Store credentials
                     if (data.token) {
                         localStorage.setItem('auth_token', data.token);
+                        localStorage.removeItem('guest_thread_id');
                     }
                     if (data.user) {
                         localStorage.setItem('user_info', JSON.stringify(data.user));

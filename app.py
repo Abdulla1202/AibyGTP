@@ -35,7 +35,9 @@ from database import (
     get_conversation_owner,
     get_admin_stats,
     count_user_conversations,
-    delete_conversation
+    delete_conversation,
+    count_messages_in_thread,
+    migrate_guest_chat
 )
 
 from rag import add_document_to_rag
@@ -46,6 +48,7 @@ from auth import (
     authenticate_user,
     create_access_token,
     get_current_user,
+    get_optional_current_user,
     require_admin,
     create_default_admin,
     get_all_users
@@ -99,9 +102,15 @@ async def auth_register(request: Request):
 
     try:
         user = register_user(username, email, password)
+        user_id = user.id
+
+        # Migrate guest chat if provided
+        guest_thread_id = data.get("guest_thread_id")
+        if guest_thread_id:
+            migrate_guest_chat(guest_thread_id, user_id)
 
         token = create_access_token({
-            "user_id": user.id,
+            "user_id": user_id,
             "username": user.username,
             "is_admin": user.is_admin
         })
@@ -143,6 +152,11 @@ async def auth_login(request: Request):
             {"error": "Invalid username or password."},
             status_code=401
         )
+
+    # Migrate guest chat if provided
+    guest_thread_id = data.get("guest_thread_id")
+    if guest_thread_id:
+        migrate_guest_chat(guest_thread_id, user.id)
 
     token = create_access_token({
         "user_id": user.id,
@@ -384,7 +398,7 @@ def extract_text_from_chunk(chunk) -> str:
 
 
 @app.post("/chat/stream")
-async def chat_stream(request: Request, current_user: dict = Depends(get_current_user)):
+async def chat_stream(request: Request, current_user: dict = Depends(get_optional_current_user)):
     try:
         data = await request.json()
     except Exception:
@@ -393,7 +407,7 @@ async def chat_stream(request: Request, current_user: dict = Depends(get_current
             status_code=400
         )
 
-    user_id = current_user["user_id"]
+    user_id = current_user["user_id"] if current_user else None
     user_message = data.get("message", "")
     thread_id = data.get("thread_id", "default")
     selected_model = data.get("model", "gemini-2.5-flash")
@@ -403,6 +417,16 @@ async def chat_stream(request: Request, current_user: dict = Depends(get_current
             {"error": "Message is required."},
             status_code=400
         )
+
+    # Guest Limit Check
+    if user_id is None:
+        # If guest, count messages for this thread
+        msg_count = count_messages_in_thread(thread_id)
+        if msg_count >= 5:
+            return JSONResponse(
+                {"error": "limit_reached", "message": "Aapki free limit khatam ho gayi hai. Aage baat karne ke liye please login karein."},
+                status_code=403
+            )
 
     agent = get_agent(selected_model)
 

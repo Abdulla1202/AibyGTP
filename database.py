@@ -239,6 +239,36 @@ def get_chat_history(thread_id: str):
         db.close()
 
 
+def count_messages_in_thread(thread_id: str) -> int:
+    """Count total messages in a thread."""
+    db = SessionLocal()
+    try:
+        return db.query(ChatMessage).filter(ChatMessage.thread_id == thread_id).count()
+    finally:
+        db.close()
+
+
+def migrate_guest_chat(thread_id: str, user_id: int):
+    """Link a guest conversation and its messages to a registered user."""
+    db = SessionLocal()
+    try:
+        # Update conversation owner
+        conv = db.query(Conversation).filter(Conversation.thread_id == thread_id).first()
+        if conv:
+            conv.user_id = user_id
+            db.commit()
+
+        # Update all messages owner
+        db.query(ChatMessage).filter(
+            ChatMessage.thread_id == thread_id,
+            ChatMessage.user_id == None
+        ).update({"user_id": user_id}, synchronize_session=False)
+
+        db.commit()
+    finally:
+        db.close()
+
+
 # ─── Long-Term Memory ────────────────────────────────────────
 
 def save_memory(thread_id: str, memory: str):

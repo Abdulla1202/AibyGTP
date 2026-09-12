@@ -568,7 +568,9 @@
     </div>
 
     <script>
-        let currentThreadId = generateUUID();
+        let savedThreadId = localStorage.getItem('guest_thread_id');
+        let currentThreadId = savedThreadId || generateUUID();
+        localStorage.setItem('guest_thread_id', currentThreadId);
         let isGenerating = false;
         let recognition = null;
         let isDictating = false;
@@ -697,7 +699,8 @@
 
         // Auth
         function getAuthHeaders() {
-            return { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') };
+            const token = localStorage.getItem('auth_token');
+            return token ? { 'Authorization': 'Bearer ' + token } : {};
         }
 
         function logout() {
@@ -708,7 +711,15 @@
 
         async function checkAuth() {
             const token = localStorage.getItem('auth_token');
-            if (!token) { window.location.href = '/login'; return false; }
+            if (!token) {
+                // Guest mode: allow access, hide authenticated parts
+                document.body.style.display = 'flex';
+                document.getElementById('userName').textContent = 'Guest';
+                document.getElementById('userAvatar').textContent = 'G';
+                document.querySelector('.user-profile').style.display = 'none';
+                document.getElementById('conversationListTitle').style.display = 'none';
+                return false;
+            }
             try {
                 const resp = await fetch('/auth/me', { headers: getAuthHeaders() });
                 if (resp.status === 401) throw new Error('Unauthorized');
@@ -1059,6 +1070,15 @@
                 });
 
                 if (response.status === 401) { logout(); return; }
+                if (response.status === 403) {
+                    const data = await response.json();
+                    if (data.error === 'limit_reached') {
+                        showToast(data.message || 'Free limit reached! Please login to continue.', 'error');
+                        setTimeout(() => { window.location.href = '/login'; }, 2000);
+                        return;
+                    }
+                    throw new Error('Forbidden');
+                }
                 if (!response.ok) throw new Error('API Error');
 
                 const reader = response.body.getReader();
