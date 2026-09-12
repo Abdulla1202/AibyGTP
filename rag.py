@@ -47,12 +47,6 @@ class LocalEmbeddings(Embeddings):
 def _init_vectorstore():
     """Initialize vectorstore using ONLY LocalEmbeddings."""
     db_path = Path("chroma_db")
-
-    # FORCE WIPE: To ensure no remnants of Google Embeddings exist
-    if db_path.exists():
-        shutil.rmtree(db_path, ignore_errors=True)
-        logger.info("Forced wipe of chroma_db to ensure local embeddings are used.")
-
     db_path.mkdir(exist_ok=True)
 
     # Use the LocalEmbeddings class defined above

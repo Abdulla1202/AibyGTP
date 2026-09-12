@@ -22,7 +22,7 @@ def set_current_thread_id(thread_id: str):
 web_search = TavilySearch(
     max_results=5,
     topic="general",
-    search_depth="advanced"
+    search_depth="basic"
 )
 
 
