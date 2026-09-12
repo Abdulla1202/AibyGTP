@@ -20,15 +20,15 @@ from tools import tools
 Path("data").mkdir(exist_ok=True)
 
 
-# Groq available models (verified)
-DEFAULT_MODEL = "qwen/qwen3.8-27b"
+# Groq available models (Updated to latest working IDs)
+DEFAULT_MODEL = "llama-3.3-70b-versatile"
 
 ALLOWED_MODELS = {
-    "qwen/qwen3.8-27b",
-    "qwen/qwen3.6-27b",
-    "openai/gpt-oss-20b",
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
+    "mixtral-8x7b-32768",
+    "gemma2-9b-it",
     "openai/gpt-oss-120b",
-    "allam-2-7b",
 }
 
 
