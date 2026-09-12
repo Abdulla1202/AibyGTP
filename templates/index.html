@@ -770,8 +770,16 @@
 
         async function loadConversations() {
             try {
+                const token = localStorage.getItem('auth_token');
+                if (!token) return; // Skip loading conversations for guests
+
                 const resp = await fetch('/conversations', { headers: getAuthHeaders() });
-                if (resp.status === 401) { logout(); return; }
+                if (resp.status === 401) {
+                    console.log('Token expired, treating as guest');
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('user_info');
+                    return;
+                }
                 const data = await resp.json();
                 const list = document.getElementById('conversationList');
                 list.innerHTML = '';
@@ -838,10 +846,23 @@
             removeUploadIndicator();
             loadConversations();
             if(window.innerWidth <= 768) toggleSidebar();
-            
+
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                showToast('Conversation history is only for registered users.', 'info');
+                newChat();
+                return;
+            }
+
             try {
                 const resp = await fetch('/history/' + threadId, { headers: getAuthHeaders() });
-                if (resp.status === 401) { logout(); return; }
+                if (resp.status === 401) {
+                    console.log('Token expired, treating as guest');
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('user_info');
+                    newChat();
+                    return;
+                }
                 const data = await resp.json();
                 if (data.messages && data.messages.length > 0) {
                     data.messages.forEach(msg => {
@@ -1069,17 +1090,24 @@
                     })
                 });
 
-                if (response.status === 401) { logout(); return; }
-                if (response.status === 403) {
+                if (response.status === 401) {
+                    // Instead of logout(), just treat as guest
+                    console.log('Unauthorized: treating as guest');
+                } else if (response.status === 403) {
                     const data = await response.json();
                     if (data.error === 'limit_reached') {
-                        showToast(data.message || 'Free limit reached! Please login to continue.', 'error');
-                        setTimeout(() => { window.location.href = '/login'; }, 2000);
+                        const proceed = confirm(data.message || 'Aapki free limit khatam ho gayi hai. Aage baat karne ke liye kya aap account banana chahte hain?');
+                        if (proceed) {
+                            window.location.href = '/login';
+                        } else {
+                            showToast('Login ke bina aap aage baat nahi kar sakte.', 'info');
+                        }
                         return;
                     }
                     throw new Error('Forbidden');
+                } else if (!response.ok) {
+                    throw new Error('API Error');
                 }
-                if (!response.ok) throw new Error('API Error');
 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder("utf-8");
@@ -1246,7 +1274,10 @@
                     body: formData
                 });
                 
-                if (response.status === 401) { logout(); return; }
+                if (response.status === 401) {
+                    showToast('Please login to upload files.', 'info');
+                    return;
+                }
                 const data = await response.json();
                 
                 if (data.success || response.ok) {
